@@ -12,9 +12,9 @@ namespace kittyGetMouse
         float gameHeight = Game1.gameHeight;
 
         public Texture2D mouseTexture;
+
         public Rectangle mouseRect;
         public Vector2 mousePosition;
-
         public float mouseSpeed;
 
         //movement variables
@@ -24,6 +24,11 @@ namespace kittyGetMouse
         float timeElapsed = 0.0f;
 
         public Enemy()
+        {
+            Reset();
+        }
+
+        public void Reset()
         {
             mouseRect = new Rectangle(0, 0, 8, 8);
             mousePosition = new Vector2(gameWidth / 2, (gameHeight / 2) + 40);

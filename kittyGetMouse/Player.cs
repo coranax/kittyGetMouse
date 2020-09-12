@@ -17,10 +17,14 @@ namespace kittyGetMouse
 
         public float kittySpeed;
 
-
         public Player()
         {
-            kittyRect = new Rectangle(0, 0, 12, 16); // for choosing which sprite from the set to use
+            Reset();
+        }
+
+        public void Reset()
+        {
+            kittyRect = new Rectangle(0, 0, 12, 16);
             kittyPosition = new Vector2(gameWidth / 2, gameHeight / 2);
             kittySpeed = 100f;
         }
