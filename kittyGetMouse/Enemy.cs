@@ -35,6 +35,20 @@ namespace kittyGetMouse
             mouseSpeed = 95f;
         }
 
+        public void Draw(SpriteBatch spriteBatch)
+        {
+                spriteBatch.Draw(
+                mouseTexture,
+                mousePosition,
+                mouseRect,
+                Color.White,
+                0f,
+                new Vector2(mouseRect.Width / 2, mouseRect.Height / 2),
+                2.0f,
+                SpriteEffects.None,
+                0f);
+        }
+
         public void MouseMove(GameTime gameTime)
         {
             //make mouse move in a random direction at a set interval
@@ -68,8 +82,8 @@ namespace kittyGetMouse
 
             if (mousePosition.Y > gameHeight - mouseRect.Height - 5)
                 mousePosition.Y = gameHeight - mouseRect.Height - 5;
-            else if (mousePosition.Y < mouseRect.Height + 5)
-                mousePosition.Y = mouseRect.Height + 5;
+            else if (mousePosition.Y < mouseRect.Height + 10)
+                mousePosition.Y = mouseRect.Height + 10;
         }
     }
 }
