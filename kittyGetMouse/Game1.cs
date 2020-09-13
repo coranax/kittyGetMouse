@@ -38,9 +38,17 @@ namespace kittyGetMouse
 
         public static float gameWidth; //easier variables
         public static float gameHeight;
+        float defWidth;
+        float defHeight;
 
         private GraphicsDeviceManager _graphics;
         private SpriteBatch _spriteBatch;
+
+        public RenderTarget2D target; //scaling and window size
+        float proportion;
+        int scale;
+
+        KeyboardState newState, oldState; //key pressed
 
         public Game1()
         {
@@ -50,25 +58,32 @@ namespace kittyGetMouse
 
         protected override void Initialize()
         {
-            IsMouseVisible = true; //this is the mouse pointer, dummy
-            _graphics.PreferredBackBufferWidth = 160; //change window size
-            _graphics.PreferredBackBufferHeight = 144;
-            _graphics.ApplyChanges();
+            scale  = 1; //overall game scaling
 
-            gameWidth = _graphics.PreferredBackBufferWidth;
-            gameHeight = _graphics.PreferredBackBufferHeight;
+            defWidth = 160; //do not change this (default size)
+            defHeight = 144;
+
+            gameWidth = defWidth;
+            gameHeight = defHeight;
 
             kitty = new Player();
             mouse = new Enemy();
 
+            IsMouseVisible = true; //this is the mouse pointer, dummy
+
             gameState = GameState.START;
 
             winningScore = 3; //9 testing fixme
-            losingTime = 3; //1 testing fixme
-
-            ResetStuff();
+            losingTime = 30; //1 testing fixme
 
             base.Initialize();
+
+            SetScale();
+
+            gameWidth = _graphics.PreferredBackBufferWidth;
+            gameHeight = _graphics.PreferredBackBufferHeight;
+
+            ResetStuff();
         }        
         public void ResetStuff() //default values
         {
@@ -99,12 +114,16 @@ namespace kittyGetMouse
             kitty.kittyTexture = Content.Load<Texture2D>("kitty");
 
             scoreText = Content.Load<SpriteFont>("gamefont");
+
+            target = new RenderTarget2D(GraphicsDevice, (int)defWidth, (int)defHeight);
         }
 
         protected override void Update(GameTime gameTime)
         {
             if (GamePad.GetState(PlayerIndex.One).Buttons.Back == ButtonState.Pressed || Keyboard.GetState().IsKeyDown(Keys.Escape))
                 Exit();
+
+            newState = Keyboard.GetState(); //for KeyPressed()
 
             if (gameState == GameState.START)
             {
@@ -119,9 +138,7 @@ namespace kittyGetMouse
                 mouse.MouseMove(gameTime);
                 TotalTime(gameTime);
 
-
-                //scoring            
-
+                //scoring
                 if (Keyboard.GetState().IsKeyDown(Keys.Up) ||
                     Keyboard.GetState().IsKeyDown(Keys.Down) ||
                     Keyboard.GetState().IsKeyDown(Keys.Left) ||
@@ -151,7 +168,6 @@ namespace kittyGetMouse
                 }
 
                 //win condition
-
                 if ((gameScore == levelUpScore) && (gameScore < winningScore))
                 {
                     level++;
@@ -165,7 +181,6 @@ namespace kittyGetMouse
                 }
 
                 //lose condition
-
                 if (seconds > losingTime) //testing minute fixme
                 {
                     gameState = GameState.LOSE;
@@ -186,11 +201,37 @@ namespace kittyGetMouse
                 if (Keyboard.GetState().IsKeyDown(Keys.Enter))
                     gameState = GameState.PLAY;
                 ResetStuff();
-            }            
+            }    
+            
+            if (KeyPressed(Keys.OemPlus) && scale < 7) //increase scale
+            {
+                scale++;
+                SetScale();
+            }
+
+            if (KeyPressed(Keys.OemMinus) && scale > 1) //decrease scale
+            {
+                scale--;
+                SetScale();
+            }
+
+            oldState = newState;  //for KeyPressed()
             base.Update(gameTime);
         }
+        public bool KeyPressed(Keys key) //true when key is released
+        {
+            if (newState.IsKeyUp(key) && oldState.IsKeyDown(key))
+                return true;
+            return false;
+        }
+        public void SetScale() //change game size
+        {
+            _graphics.PreferredBackBufferWidth = (int)defWidth * scale;
+            _graphics.PreferredBackBufferHeight = (int)defHeight * scale;
+            _graphics.ApplyChanges();
+        }
 
-        public void TotalTime(GameTime gameTime)
+        public void TotalTime(GameTime gameTime) //timer
         {
             timeElapsed += (float)gameTime.ElapsedGameTime.TotalSeconds;
 
@@ -203,6 +244,9 @@ namespace kittyGetMouse
         protected override void Draw(GameTime gameTime)
         {
             GraphicsDevice.Clear(Color.CornflowerBlue);
+
+            proportion = 1f / (defHeight / _graphics.GraphicsDevice.Viewport.Height); //keep game elements in proportion
+            GraphicsDevice.SetRenderTarget(target);
 
             _spriteBatch.Begin(SpriteSortMode.Immediate, BlendState.AlphaBlend, SamplerState.PointClamp, null, null, null);
 
@@ -252,7 +296,7 @@ namespace kittyGetMouse
             {
                 _spriteBatch.Draw(
                     messageBox,
-                    new Vector2(gameWidth / 2, gameHeight / 2 + 25),
+                    new Vector2(defWidth / 2, defHeight / 2 + 25),
                     messageRect,
                     Color.White,
                     0f,
@@ -276,7 +320,11 @@ namespace kittyGetMouse
                     SpriteEffects.None,
                     0f);*/
 
+            _spriteBatch.End();
 
+            GraphicsDevice.SetRenderTarget(null); //more scaling and proportion stuff
+            _spriteBatch.Begin(SpriteSortMode.Immediate, BlendState.AlphaBlend, SamplerState.PointClamp, null, null, null);
+            _spriteBatch.Draw(target, Vector2.Zero, null, Color.White, 0f, Vector2.Zero, proportion, SpriteEffects.None, 0f);
             _spriteBatch.End();
 
             base.Draw(gameTime);
