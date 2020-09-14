@@ -2,7 +2,6 @@
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 using System;
-using System.Diagnostics;
 
 namespace kittyGetMouse
 {
@@ -58,7 +57,7 @@ namespace kittyGetMouse
 
         protected override void Initialize()
         {
-            scale  = 1; //overall game scaling
+            scale = 3; //overall game scaling, change this or use +/- key in game
 
             defWidth = 160; //do not change this (default size)
             defHeight = 144;
@@ -73,8 +72,8 @@ namespace kittyGetMouse
 
             gameState = GameState.START;
 
-            winningScore = 3; //9 testing fixme
-            losingTime = 30; //1 testing fixme
+            winningScore = 9;
+            losingTime = 1;
 
             base.Initialize();
 
@@ -84,12 +83,13 @@ namespace kittyGetMouse
             gameHeight = _graphics.PreferredBackBufferHeight;
 
             ResetStuff();
-        }        
+        }
+
         public void ResetStuff() //default values
         {
             gameScore = 0;
             level = 1;
-            levelUpScore = 1; //3 testing fixme
+            levelUpScore = 3;
             mouseStatus = true;
             deathTime = 100;
             enemyDeathTimer = deathTime;
@@ -102,6 +102,7 @@ namespace kittyGetMouse
             kitty.Reset();
             mouse.Reset();
         }
+
         protected override void LoadContent()
         {
             _spriteBatch = new SpriteBatch(GraphicsDevice);
@@ -181,7 +182,7 @@ namespace kittyGetMouse
                 }
 
                 //lose condition
-                if (seconds > losingTime) //testing minute fixme
+                if (minutes > losingTime)
                 {
                     gameState = GameState.LOSE;
                 }
@@ -201,8 +202,8 @@ namespace kittyGetMouse
                 if (Keyboard.GetState().IsKeyDown(Keys.Enter))
                     gameState = GameState.PLAY;
                 ResetStuff();
-            }    
-            
+            }
+
             if (KeyPressed(Keys.OemPlus) && scale < 7) //increase scale
             {
                 scale++;
@@ -218,12 +219,14 @@ namespace kittyGetMouse
             oldState = newState;  //for KeyPressed()
             base.Update(gameTime);
         }
-        public bool KeyPressed(Keys key) //true when key is released
+
+        public bool KeyPressed(Keys key) //logs only one press of a key at a time
         {
             if (newState.IsKeyUp(key) && oldState.IsKeyDown(key))
                 return true;
             return false;
         }
+
         public void SetScale() //change game size
         {
             _graphics.PreferredBackBufferWidth = (int)defWidth * scale;
@@ -306,7 +309,7 @@ namespace kittyGetMouse
                     0f);
             }
 
-            /*Vector2 size = scoreText.MeasureString(gameMessageString);
+            /*Vector2 size = scoreText.MeasureString(gameMessageString); //might reuse this later
             
             if (gameState != GameState.PLAY) //start/win/lose msg
                 _spriteBatch.DrawString(
@@ -330,5 +333,4 @@ namespace kittyGetMouse
             base.Draw(gameTime);
         }
     }
-}
-
+} //ggez
