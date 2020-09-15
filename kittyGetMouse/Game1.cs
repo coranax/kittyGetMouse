@@ -2,12 +2,13 @@
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 using System;
+using System.Diagnostics;
 
 namespace kittyGetMouse
 {
     public class Game1 : Game
     {
-        enum GameState { START, PLAY, WIN, LOSE };
+        enum GameState { TITLE, START, PLAY, WIN, LOSE };
         GameState gameState;
         //string gameMessageString;
         Texture2D messageBox;
@@ -22,7 +23,8 @@ namespace kittyGetMouse
         float minutes;
         float seconds;
         float timeElapsed;
-        int losingTime;
+        float losingTime;
+        string losingTimeString;
 
         bool mouseStatus; //mouse spawn parameters
         int deathTime;
@@ -70,10 +72,11 @@ namespace kittyGetMouse
 
             IsMouseVisible = true; //this is the mouse pointer, dummy
 
-            gameState = GameState.START;
+            gameState = GameState.TITLE;
 
-            winningScore = 9;
-            losingTime = 1;
+            winningScore = 9; //win and lose variables
+            losingTime = 1f; //minutes
+            losingTimeString = losingTime + ":00"; //change this manually if losing time should be seconds
 
             base.Initialize();
 
@@ -126,10 +129,17 @@ namespace kittyGetMouse
 
             newState = Keyboard.GetState(); //for KeyPressed()
 
+            if (gameState == GameState.TITLE)
+            {
+                messageRect = new Rectangle(160, 144, 160, 144);
+                if (KeyPressed(Keys.Enter))
+                    gameState = GameState.START;
+            }
+
             if (gameState == GameState.START)
             {
-                messageRect = new Rectangle(0, 0, 140, 53);
-                if (Keyboard.GetState().IsKeyDown(Keys.Enter))
+                messageRect = new Rectangle(0, 0, 160, 144);
+                if (KeyPressed(Keys.Enter))
                     gameState = GameState.PLAY;
             }
 
@@ -182,24 +192,26 @@ namespace kittyGetMouse
                 }
 
                 //lose condition
-                if (minutes > losingTime)
+                if (minutes >= losingTime)
                 {
                     gameState = GameState.LOSE;
                 }
             }
 
+            Trace.WriteLine("losing time " + losingTime + "  and  minutes " + minutes);
+
             if (gameState == GameState.WIN)
             {
-                messageRect = new Rectangle(140, 0, 140, 53);
-                if (Keyboard.GetState().IsKeyDown(Keys.Enter))
+                messageRect = new Rectangle(160, 0, 160, 144);
+                if (KeyPressed(Keys.Enter))
                     gameState = GameState.PLAY;
                 ResetStuff();
             }
 
             if (gameState == GameState.LOSE)
             {
-                messageRect = new Rectangle(0, 53, 140, 53);
-                if (Keyboard.GetState().IsKeyDown(Keys.Enter))
+                messageRect = new Rectangle(0, 144, 160, 144);
+                if (KeyPressed(Keys.Enter))
                     gameState = GameState.PLAY;
                 ResetStuff();
             }
@@ -223,7 +235,10 @@ namespace kittyGetMouse
         public bool KeyPressed(Keys key) //logs only one press of a key at a time
         {
             if (newState.IsKeyUp(key) && oldState.IsKeyDown(key))
+            {
+                oldState = newState;
                 return true;
+            }
             return false;
         }
 
@@ -252,6 +267,8 @@ namespace kittyGetMouse
             GraphicsDevice.SetRenderTarget(target);
 
             _spriteBatch.Begin(SpriteSortMode.Immediate, BlendState.AlphaBlend, SamplerState.PointClamp, null, null, null);
+
+            Color textColor = new Color(15, 56, 15);
 
             for (int i = 0; i <= gameWidth; i += 32) //background
             {
@@ -290,16 +307,16 @@ namespace kittyGetMouse
 
             if (gameState == GameState.PLAY) //game info
             {
-                _spriteBatch.DrawString(scoreText, gameScore.ToString(), new Vector2(40, 8), Color.White); //score
-                _spriteBatch.DrawString(scoreText, level.ToString(), new Vector2(78, 14), Color.White); //level
-                _spriteBatch.DrawString(scoreText, gameTimeString, new Vector2(133, 8), Color.White); //time
+                _spriteBatch.DrawString(scoreText, gameScore.ToString(), new Vector2(40, 8), textColor); //score
+                _spriteBatch.DrawString(scoreText, level.ToString(), new Vector2(78, 14), textColor); //level
+                _spriteBatch.DrawString(scoreText, gameTimeString, new Vector2(133, 8), textColor); //time
             }
 
             if (gameState != GameState.PLAY) //message box
             {
                 _spriteBatch.Draw(
                     messageBox,
-                    new Vector2(defWidth / 2, defHeight / 2 + 25),
+                    new Vector2(defWidth / 2, defHeight / 2),
                     messageRect,
                     Color.White,
                     0f,
@@ -307,6 +324,12 @@ namespace kittyGetMouse
                     1.0f,
                     SpriteEffects.None,
                     0f);
+            }
+            
+            if (gameState == GameState.START) //text winning score and losing time
+            {
+                _spriteBatch.DrawString(scoreText, winningScore.ToString(), new Vector2(81, 72), textColor, 0f, Vector2.Zero, 2f, SpriteEffects.None, 0f);
+                _spriteBatch.DrawString(scoreText, losingTimeString, new Vector2(77, 88), textColor, 0f, Vector2.Zero, 2f, SpriteEffects.None, 0f);
             }
 
             /*Vector2 size = scoreText.MeasureString(gameMessageString); //might reuse this later
